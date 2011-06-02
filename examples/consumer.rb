@@ -13,6 +13,14 @@ client.subscribe("/queue/ronaldo", {:ack => "client", "activemq.prefetchSize" =>
   client.acknowledge(msg)
 end
 
+client.on_connect do
+  puts "Yey! I'm connected"
+end
+
+client.on_connect_fail do
+  puts "Oh lord"
+end
+
 loop do
   sleep(1)
   puts "."
