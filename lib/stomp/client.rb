@@ -243,6 +243,20 @@ module Stomp
       @logger = logger
     end
 
+    def before_connect(&block)
+      @connection.define_singleton_method(:before_connect, &block)
+    end
+
+    def after_connect(&block)
+      @connection.define_singleton_method(:after_connect, &block)
+    end
+    alias :on_connect :after_connect
+
+    def after_connect_fail(&block)
+      @connection.define_singleton_method(:after_connect_fail, &block)
+    end
+    alias :on_connect_fail :after_connect_fail
+
     private
       # Set a subscription id in the headers hash if one does not already exist.
       # For simplicities sake, all subscriptions have a subscription ID.

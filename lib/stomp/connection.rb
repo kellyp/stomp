@@ -106,6 +106,7 @@ module Stomp
 
     def socket
       @socket_semaphore.synchronize do
+        before_connect
         used_socket = @socket
         used_socket = nil if closed?
         
@@ -118,10 +119,12 @@ module Stomp
             connect(used_socket)
             
             @connection_attempts = 0
+            after_connect
           rescue => e
             @failure = e
             used_socket = nil
             raise unless @reliable
+            after_connect_fail
             logger.error "connect to #{@host} failed: #{e.inspect} will retry(##{@connection_attempts}) in #{@reconnect_delay}"
 
             raise Stomp::Error::MaxReconnectAttempts if max_reconnect_attempts?
@@ -350,6 +353,15 @@ module Stomp
 
     def logger=(logger)
       @logger = logger
+    end
+
+    def before_connect
+    end
+
+    def after_connect
+    end
+
+    def after_connect_fail
     end
 
     private
