@@ -45,6 +45,7 @@ module Stomp
         @passcode = first_host[:passcode]
         @host = first_host[:host]
         @port = first_host[:port] || Connection::default_port(first_host[:ssl])
+        @logger = @parameters[:logger]
         
         @reliable = true
         
@@ -205,7 +206,7 @@ module Stomp
     end
     
     def send(*args)
-      warn("This method is deprecated and will be removed on the next release. Use 'publish' instead")
+      logger.warn("This method is deprecated and will be removed on the next release. Use 'publish' instead")
       publish(*args)
     end
     
@@ -236,6 +237,10 @@ module Stomp
     # Check if the thread was created and isn't dead
     def running
       @listener_thread && !!@listener_thread.status
+    end
+
+    def logger=(logger)
+      @logger = logger
     end
 
     private
@@ -334,6 +339,10 @@ module Stomp
           end
         end
         
+      end
+
+      def logger
+        @logger ||= Logger.new(STDOUT)
       end
   end
 end

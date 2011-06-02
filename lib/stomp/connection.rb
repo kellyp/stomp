@@ -94,6 +94,7 @@ module Stomp
       @reconnect_delay = @parameters[:initial_reconnect_delay]
       @connect_headers = @parameters[:connect_headers]
       @parse_timeout =  @parameters[:parse_timeout]
+      @logger = @parameters[:logger]
       #sets the first host to connect
       change_host
     end
@@ -117,11 +118,11 @@ module Stomp
             connect(used_socket)
             
             @connection_attempts = 0
-          rescue
-            @failure = $!
+          rescue => e
+            @failure = e
             used_socket = nil
             raise unless @reliable
-            $stderr.print "connect to #{@host} failed: #{$!} will retry(##{@connection_attempts}) in #{@reconnect_delay}\n"
+            logger.error "connect to #{@host} failed: #{e.inspect} will retry(##{@connection_attempts}) in #{@reconnect_delay}"
 
             raise Stomp::Error::MaxReconnectAttempts if max_reconnect_attempts?
 
@@ -261,7 +262,7 @@ module Stomp
     end
     
     def send(*args)
-      warn("This method is deprecated and will be removed on the next release. Use 'publish' instead")
+      logger.warn("This method is deprecated and will be removed on the next release. Use 'publish' instead")
       publish(*args)
     end
     
@@ -329,10 +330,10 @@ module Stomp
         begin
           used_socket = socket
           return _receive(used_socket)
-        rescue
-          @failure = $!
+        rescue => e
+          @failure = e
           raise unless @reliable
-          $stderr.print "receive failed: #{$!}"
+          logger.error "receive failed: #{e.inspect}"
         end
       end
     end
@@ -340,11 +341,15 @@ module Stomp
     def receive
       super_result = __old_receive
       if super_result.nil? && @reliable
-        $stderr.print "connection.receive returning EOF as nil - resetting connection.\n"
+        logger.error "connection.receive returning EOF as nil - resetting connection."
         @socket = nil
         super_result = __old_receive
       end
       return super_result
+    end
+
+    def logger=(logger)
+      @logger = logger
     end
 
     private
@@ -414,10 +419,10 @@ module Stomp
             return
           rescue Stomp::Error::MaxReconnectAttempts => e
               raise
-          rescue
-            @failure = $!
+          rescue => e
+            @failure = e
             raise unless @reliable
-            $stderr.print "transmit to #{@host} failed: #{$!}\n"
+            logger.error "transmit to #{@host} failed: #{e.inspect}"
           end
         end
       end
@@ -511,6 +516,9 @@ module Stomp
         @subscriptions.each { |k,v| _transmit(used_socket, "SUBSCRIBE", v) }
       end
 
+      def logger
+        @logger ||= Logger.new(STDOUT)
+      end
   end
 
 end
