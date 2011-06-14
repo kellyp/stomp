@@ -357,7 +357,7 @@ module Stomp
 
           # If the reading hangs for more than X seconds, abort the parsing process.
           # X defaults to 5.  Override allowed in connection hash parameters.
-          Timeout::timeout(@parse_timeout, Stomp::Error::PacketParsingTimeout) do
+          #Timeout::timeout(@parse_timeout, Stomp::Error::PacketParsingTimeout) do
             # Reads the beginning of the message until it runs into a empty line
             message_header = ''
             begin
@@ -398,7 +398,7 @@ module Stomp
             # Adds the excluded \n and \0 and tries to create a new message with it
             Message.new(message_header + "\n" + message_body + "\0")
           end
-        end
+        #end
       end
 
       def parse_char(char)
